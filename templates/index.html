@@ -1,0 +1,1257 @@
+<!DOCTYPE html>
+<html lang="he" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ReelStudio</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#000000;
+  --surface:#1c1c1e;
+  --surface2:#2c2c2e;
+  --border:#38383a;
+  --text:#f5f5f7;
+  --text2:#86868b;
+  --accent:#0A84FF;
+  --accent2:#5E5CE6;
+  --red:#ff453a;
+  --green:#32d74b;
+  --yellow:#ffd60a;
+}
+html{font-size:15px}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
+a{color:var(--accent);text-decoration:none;transition:color 0.2s}
+a:hover{color:var(--accent2)}
+
+/* Header */
+.header{
+  position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;
+  padding:16px 28px;
+  background:rgba(28,28,30,0.7);
+  border-bottom:1px solid rgba(255,255,255,0.05);
+  backdrop-filter:saturate(180%) blur(20px);
+  -webkit-backdrop-filter:saturate(180%) blur(20px);
+}
+.header h1{font-size:1.5rem;font-weight:700;letter-spacing:-0.5px}
+.header h1 span{background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.btn{
+  padding:10px 18px;border-radius:12px;border:none;background:var(--surface2);color:var(--text);
+  cursor:pointer;font-size:0.9rem;font-weight:600;transition:all 0.2s cubic-bezier(0.25,0.8,0.25,1);
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+}
+.btn:hover{background:#3a3a3c;transform:translateY(-1px)}
+.btn:active{transform:scale(0.96)}
+.btn:disabled{opacity:0.5;cursor:not-allowed;transform:none}
+.btn-primary{background:var(--accent);color:#fff;box-shadow:0 4px 14px rgba(10,132,255,0.25)}
+.btn-primary:hover:not(:disabled){background:#0071e3;box-shadow:0 6px 20px rgba(10,132,255,0.35)}
+.btn-sm{padding:6px 12px;font-size:0.8rem;border-radius:8px;}
+.btn-danger{background:rgba(255,69,58,0.1);color:var(--red)}
+.btn-danger:hover:not(:disabled){background:var(--red);color:#fff}
+
+/* Layout */
+.main{display:grid;grid-template-columns:1fr 1fr;gap:24px;padding:32px 28px;max-width:1400px;margin:0 auto}
+@media(max-width:900px){.main{grid-template-columns:1fr}}
+.card-full{grid-column:1/-1}
+
+/* Card */
+.card{
+  background:var(--surface);
+  border:1px solid rgba(255,255,255,0.05);
+  border-radius:24px;
+  padding:28px;
+  display:flex;flex-direction:column;gap:20px;
+  box-shadow:0 10px 30px rgba(0,0,0,0.3);
+  position:relative;overflow:hidden;
+}
+.card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,rgba(255,255,255,0),rgba(255,255,255,0.08),rgba(255,255,255,0));
+}
+.card-title{font-size:1.25rem;font-weight:600;display:flex;align-items:center;gap:10px;letter-spacing:-0.3px}
+.card-title .icon{font-size:1.4rem;background:var(--surface2);padding:6px;border-radius:10px;display:inline-flex}
+
+/* Drop zone */
+.dropzone{
+  border:2px dashed var(--border);
+  border-radius:16px;padding:40px 20px;text-align:center;cursor:pointer;
+  transition:all 0.3s ease;position:relative;background:rgba(255,255,255,0.02);
+}
+.dropzone:hover,.dropzone.drag-over{
+  border-color:var(--accent);
+  background:rgba(10,132,255,0.05);
+  transform:scale(1.01);
+}
+.dropzone p{color:var(--text);font-size:0.95rem;font-weight:500;margin-top:8px}
+.dropzone p strong{color:var(--accent)}
+.dropzone .chosen{color:var(--green);font-weight:600;margin-top:10px;font-size:0.9rem;word-break:break-all}
+.dropzone input[type=file]{display:none}
+
+/* Sliders */
+.slider-group{display:flex;flex-direction:column;gap:16px;background:var(--surface2);padding:16px;border-radius:16px;}
+.slider-row{display:flex;align-items:center;gap:16px}
+.slider-row label{flex:0 0 120px;font-size:0.9rem;font-weight:500;color:var(--text)}
+.slider-row input[type=range]{
+  flex:1;
+  -webkit-appearance:none;appearance:none;
+  background:rgba(255,255,255,0.1);
+  height:6px;
+  border-radius:3px;
+  outline:none;
+}
+.slider-row input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;
+  width:20px;height:20px;border-radius:50%;
+  background:#fff;
+  cursor:pointer;
+  box-shadow:0 2px 6px rgba(0,0,0,0.3);
+  transition:transform 0.1s;
+}
+.slider-row input[type=range]::-webkit-slider-thumb:active{transform:scale(1.1)}
+.slider-row .val{flex:0 0 60px;text-align:right;font-size:0.85rem;font-weight:600;color:var(--text2);font-variant-numeric:tabular-nums}
+
+/* Select */
+.select-row{display:flex;align-items:center;gap:16px;background:var(--surface2);padding:12px 16px;border-radius:12px;}
+.select-row label{flex:0 0 100px;font-size:0.9rem;font-weight:500;color:var(--text)}
+.select-row select{
+  flex:1;
+  padding:10px 14px;
+  border-radius:10px;
+  border:1px solid rgba(255,255,255,0.05);
+  background:var(--surface);
+  color:var(--text);
+  font-size:0.9rem;font-weight:500;
+  outline:none;
+  appearance:none;
+  background-image:url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23a1a1aa%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+  background-repeat:no-repeat;background-position:right 12px top 50%;background-size:10px auto;
+  cursor:pointer;
+}
+
+/* Progress */
+.progress-area{display:none;flex-direction:column;gap:10px;background:var(--surface2);padding:16px;border-radius:16px;}
+.progress-area.active{display:flex;animation:fade-in 0.3s ease}
+@keyframes fade-in{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+.progress-bar-track{height:8px;background:rgba(255,255,255,0.08);border-radius:4px;overflow:hidden}
+.progress-bar-fill{
+  height:100%;
+  background:var(--accent);
+  border-radius:4px;
+  transition:width 0.4s cubic-bezier(0.1,0.8,0.2,1);
+  width:0%;
+  position:relative;
+  box-shadow:0 0 10px rgba(10,132,255,0.5);
+}
+.progress-bar-fill::after{
+  content:'';position:absolute;top:0;left:0;right:0;bottom:0;
+  background:linear-gradient(90deg,rgba(255,255,255,0),rgba(255,255,255,0.2),rgba(255,255,255,0));
+  animation:shimmer 1.5s infinite;
+}
+@keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+.progress-msg{font-size:0.85rem;color:var(--text);display:flex;justify-content:space-between;font-weight:500}
+.progress-msg .pct{color:var(--text);font-variant-numeric:tabular-nums;opacity:0.8}
+
+/* Result */
+.result{display:none;padding:14px 18px;border-radius:12px;font-size:0.9rem;font-weight:500;animation:fade-in 0.3s ease}
+.result.success{display:block;background:rgba(50,215,75,0.1);border:1px solid rgba(50,215,75,0.2);color:var(--green)}
+.result.error{display:block;background:rgba(255,69,58,0.1);border:1px solid rgba(255,69,58,0.2);color:var(--red)}
+.result a{color:var(--text);font-weight:600;text-decoration:underline}
+
+/* Subtitle editor */
+.sub-editor{display:none;flex-direction:column;gap:16px;border-top:1px solid rgba(255,255,255,0.05);padding-top:20px}
+.sub-editor.active{display:flex;animation:fade-in 0.4s ease}
+.sub-toolbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.badge{padding:6px 12px;border-radius:14px;background:var(--surface2);font-size:0.8rem;font-weight:600;color:var(--text2)}
+.sub-list{display:flex;flex-direction:column;gap:10px;max-height:450px;overflow-y:auto;padding-right:6px}
+.sub-list::-webkit-scrollbar{width:6px}
+.sub-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:6px}
+.seg{
+  display:grid;grid-template-columns:36px 1fr auto;gap:12px;align-items:start;
+  padding:14px;background:var(--surface2);border-radius:14px;
+  border:1px solid rgba(255,255,255,0.02);transition:all 0.2s;
+}
+.seg:hover{background:#303032;transform:scale(1.005)}
+.seg-idx{font-size:0.8rem;font-weight:600;color:var(--text2);padding-top:8px;text-align:center}
+.seg textarea{
+  width:100%;min-height:42px;padding:10px 14px;border-radius:10px;
+  border:1px solid rgba(255,255,255,0.08);background:var(--bg);color:var(--text);
+  font-size:0.95rem;font-weight:400;font-family:inherit;resize:none;
+  direction:rtl;text-align:right;line-height:1.6;overflow:hidden;
+  transition:border-color 0.2s;
+}
+.seg textarea:focus{border-color:var(--accent);outline:none;background:var(--surface)}
+.seg-meta{display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+.seg-time{font-size:0.75rem;font-weight:600;color:var(--text2);white-space:nowrap;font-variant-numeric:tabular-nums;background:var(--bg);padding:4px 8px;border-radius:6px;}
+.seg-actions{display:flex;gap:6px}
+.seg-actions button{
+  width:30px;height:30px;border-radius:8px;border:none;background:var(--bg);
+  color:var(--text2);cursor:pointer;font-size:0.85rem;display:flex;align-items:center;justify-content:center;
+  transition:all 0.2s;
+}
+.seg-actions button:hover{background:var(--border);color:var(--text);transform:scale(1.05)}
+.seg-actions button.del:hover{background:rgba(255,69,58,0.15);color:var(--red)}
+.export-bar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;background:var(--surface2);padding:14px 18px;border-radius:16px;margin-top:4px}
+
+/* Video preview */
+.video-preview{display:none;flex-direction:column;gap:16px;border-top:1px solid rgba(255,255,255,0.05);padding-top:20px}
+.video-preview.active{display:flex;animation:fade-in 0.4s ease}
+.video-preview video{width:100%;max-height:400px;border-radius:16px;background:#000;box-shadow:0 8px 24px rgba(0,0,0,0.5)}
+.video-preview .preview-actions{display:flex;gap:12px;align-items:center}
+
+/* Live subtitle overlay on video */
+.video-sub-container{position:relative;width:100%}
+.video-sub-container video{width:100%;display:block;border-radius:16px;max-height:400px;background:#000;box-shadow:0 8px 24px rgba(0,0,0,0.5)}
+.sub-overlay{
+  position:absolute;bottom:48px;left:0;right:0;
+  text-align:center;pointer-events:none;z-index:10;
+  padding:0 16px;
+}
+.sub-overlay:empty{display:none}
+.sub-overlay span{
+  display:inline-block;
+  background:rgba(0,0,0,0.78);
+  color:#fff;font-size:1.15rem;font-weight:600;
+  padding:7px 16px;border-radius:8px;
+  line-height:1.6;white-space:pre-line;
+  direction:rtl;text-align:center;
+  max-width:90%;
+  text-shadow:0 1px 3px rgba(0,0,0,0.5);
+}
+
+/* Toggle row */
+.toggle-row{display:flex;align-items:center;justify-content:space-between;background:var(--surface2);padding:14px 18px;border-radius:12px;}
+.toggle-row label:not(.toggle){font-size:0.95rem;font-weight:500;color:var(--text);cursor:pointer}
+.toggle{position:relative;width:50px;height:30px;flex-shrink:0}
+.toggle input{opacity:0;width:0;height:0}
+.toggle .slider{position:absolute;inset:0;background:rgba(255,255,255,0.15);border-radius:30px;cursor:pointer;transition:all 0.3s cubic-bezier(0.4,0,0.2,1)}
+.toggle .slider::before{
+  content:'';position:absolute;height:26px;width:26px;left:2px;bottom:2px;
+  background:#fff;border-radius:50%;transition:all 0.3s cubic-bezier(0.4,0,0.2,1);
+  box-shadow:0 2px 4px rgba(0,0,0,0.2);
+}
+.toggle input:checked+.slider{background:var(--green)}
+.toggle input:checked+.slider::before{transform:translateX(20px)}
+
+/* Transcription output */
+.trans-output{display:none;flex-direction:column;gap:16px;border-top:1px solid rgba(255,255,255,0.05);padding-top:20px}
+.trans-output.active{display:flex;animation:fade-in 0.4s ease}
+.trans-output textarea{
+  width:100%;min-height:220px;padding:18px;border-radius:16px;
+  border:1px solid rgba(255,255,255,0.08);background:var(--surface2);color:var(--text);
+  font-size:1rem;font-weight:400;font-family:inherit;resize:vertical;
+  direction:rtl;text-align:right;line-height:1.7;transition:border-color 0.2s;
+}
+.trans-output textarea:focus{border-color:var(--accent);outline:none;background:var(--surface)}
+.trans-actions{display:flex;gap:12px;flex-wrap:wrap;background:var(--surface2);padding:14px 18px;border-radius:16px;}
+
+/* Settings modal */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:200;align-items:center;justify-content:center}
+.modal-overlay.active{display:flex;animation:fade-in 0.2s ease}
+.modal{
+  background:var(--surface);border:1px solid rgba(255,255,255,0.08);border-radius:24px;
+  padding:32px;width:440px;max-width:92vw;display:flex;flex-direction:column;gap:20px;
+  box-shadow:0 20px 40px rgba(0,0,0,0.4);
+  transform:scale(0.95);opacity:0;animation:modal-enter 0.4s cubic-bezier(0.16,1,0.3,1) forwards;
+}
+@keyframes modal-enter{to{transform:scale(1);opacity:1}}
+.modal h2{font-size:1.4rem;font-weight:700;display:flex;align-items:center;gap:10px}
+.modal .field{display:flex;flex-direction:column;gap:8px}
+.modal .field label{font-size:0.85rem;font-weight:600;color:var(--text2)}
+.modal .field input,.modal .field select{
+  padding:12px 14px;border-radius:10px;border:1px solid rgba(255,255,255,0.08);
+  background:var(--bg);color:var(--text);font-size:0.95rem;transition:border-color 0.2s;
+}
+.modal .field input:focus,.modal .field select:focus{border-color:var(--accent);outline:none}
+.modal-actions{display:flex;gap:12px;justify-content:flex-end;margin-top:10px}
+
+/* Toast */
+.toast-container{position:fixed;bottom:24px;right:24px;z-index:300;display:flex;flex-direction:column-reverse;gap:12px;pointer-events:none}
+.toast{
+  padding:14px 20px;border-radius:16px;font-size:0.9rem;font-weight:500;color:#fff;
+  pointer-events:auto;animation:toastin 0.4s cubic-bezier(0.16,1,0.3,1),toastout 0.3s cubic-bezier(0.36,0,0.66,-0.56) 3.5s forwards;
+  max-width:360px;box-shadow:0 8px 20px rgba(0,0,0,0.25);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  border:1px solid rgba(255,255,255,0.1);
+}
+.toast-content {display:flex;align-items:center;gap:10px}
+.toast.success{background:rgba(50,215,75,0.85)}
+.toast.error{background:rgba(255,69,58,0.85)}
+.toast.info{background:rgba(28,28,30,0.85)}
+@keyframes toastin{from{opacity:0;transform:translateY(24px) scale(0.9)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes toastout{from{opacity:1;transform:scale(1)}to{opacity:0;transform:scale(0.9)}}
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<header class="header">
+  <h1><span>Reel</span>Studio</h1>
+  <div style="display:flex;gap:10px">
+    <button class="btn btn-sm btn-danger" onclick="clearCache()">Clear Cache</button>
+    <button class="btn" onclick="openSettings()">&#9881; Settings</button>
+  </div>
+</header>
+
+<!-- Main grid -->
+<main class="main">
+
+  <!-- ================= SILENCE CUTTER ================= -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#9988;</span> Silence Cutter</div>
+
+    <div class="dropzone" id="cutDrop" onclick="document.getElementById('cutFile').click()">
+      <p><strong>Drop video here</strong> or click to browse</p>
+      <div class="chosen" id="cutFileName"></div>
+      <input type="file" id="cutFile" accept="video/*">
+    </div>
+
+    <div class="slider-group">
+      <div class="slider-row">
+        <label>Threshold</label>
+        <input type="range" id="cutThreshold" min="-60" max="-10" step="1" value="-35">
+        <span class="val" id="cutThresholdVal">-35 dB</span>
+      </div>
+      <div class="slider-row">
+        <label>Min Duration</label>
+        <input type="range" id="cutDuration" min="0.1" max="2.0" step="0.05" value="0.4">
+        <span class="val" id="cutDurationVal">0.40 s</span>
+      </div>
+      <div class="slider-row">
+        <label>Padding</label>
+        <input type="range" id="cutPadding" min="0" max="0.5" step="0.01" value="0.1">
+        <span class="val" id="cutPaddingVal">0.10 s</span>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" id="cutBtn" disabled onclick="startCut()">Cut Silences</button>
+
+    <div class="progress-area" id="cutProgress">
+      <div class="progress-bar-track"><div class="progress-bar-fill" id="cutBar"></div></div>
+      <div class="progress-msg"><span id="cutMsg">Starting...</span><span class="pct" id="cutPct">0%</span></div>
+      <button class="btn btn-danger btn-sm" id="cutUploadCancelBtn" style="display:none;margin-top:6px">Cancel Upload</button>
+      <button class="btn btn-danger btn-sm" id="cutCancelBtn" onclick="cancelJob('cut')" style="display:none;margin-top:6px">Cancel</button>
+    </div>
+
+    <div class="result" id="cutResult"></div>
+
+    <div class="video-preview" id="cutPreview">
+      <video id="cutVideo" controls></video>
+      <div class="preview-actions">
+        <a class="btn btn-primary btn-sm" id="cutDownloadLink" download>&#8595; Download Video</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= SUBTITLE TRANSCRIBER ================= -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128172;</span> Subtitle Transcriber</div>
+
+    <div class="dropzone" id="subDrop" onclick="document.getElementById('subFile').click()">
+      <p><strong>Drop video here</strong> or click to browse</p>
+      <div class="chosen" id="subFileName"></div>
+      <input type="file" id="subFile" accept="video/*,audio/*">
+    </div>
+
+    <div class="select-row">
+      <label>Model</label>
+      <select id="subModel">
+        <option value="tiny">tiny (fastest)</option>
+        <option value="base">base</option>
+        <option value="small">small (balanced)</option>
+        <option value="medium" selected>medium (recommended)</option>
+        <option value="turbo">turbo (⚡ fast &amp; accurate)</option>
+        <option value="large-v3">large-v3 (best, slow)</option>
+      </select>
+    </div>
+
+    <div class="slider-group">
+      <div class="slider-row">
+        <label>Words / Line</label>
+        <input type="range" id="subMaxWords" min="2" max="10" step="1" value="5">
+        <span class="val" id="subMaxWordsVal">5</span>
+      </div>
+      <div class="slider-row">
+        <label>Lines / Sub</label>
+        <input type="range" id="subMaxLines" min="1" max="4" step="1" value="2">
+        <span class="val" id="subMaxLinesVal">2</span>
+      </div>
+    </div>
+
+    <div class="toggle-row">
+      <label>Divide speakers</label>
+      <label class="toggle"><input type="checkbox" id="subDiarize"><span class="slider"></span></label>
+    </div>
+
+    <button class="btn btn-primary" id="subBtn" disabled onclick="startTranscribe()">Transcribe</button>
+
+    <div class="progress-area" id="subProgress">
+      <div class="progress-bar-track"><div class="progress-bar-fill" id="subBar"></div></div>
+      <div class="progress-msg"><span id="subMsg">Starting...</span><span class="pct" id="subPct">0%</span></div>
+      <button class="btn btn-danger btn-sm" id="subUploadCancelBtn" style="display:none;margin-top:6px">Cancel Upload</button>
+      <button class="btn btn-danger btn-sm" id="subCancelBtn" onclick="cancelJob('sub')" style="display:none;margin-top:6px">Cancel</button>
+    </div>
+
+    <div class="result" id="subResult"></div>
+
+    <div class="video-preview" id="subPreview">
+      <div class="video-sub-container">
+        <video id="subVideo" controls></video>
+        <div class="sub-overlay" id="subOverlay"></div>
+      </div>
+    </div>
+
+    <!-- Subtitle editor -->
+    <div class="sub-editor" id="subEditor">
+      <div class="sub-toolbar">
+        <span class="badge" id="segCount">0 segments</span>
+        <button class="btn btn-sm" id="noPunctBtn" onclick="togglePunct()">No Punct</button>
+      </div>
+      <div class="sub-list" id="segList"></div>
+      <div class="export-bar">
+        <button class="btn btn-primary btn-sm" onclick="exportSrt()">Export SRT</button>
+        <button class="btn btn-sm" onclick="copyAllText()">Copy Text</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= VIDEO TRANSCRIBER ================= -->
+  <div class="card card-full">
+    <div class="card-title"><span class="icon">&#128196;</span> Video Transcriber</div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start">
+      <div class="dropzone" id="vtDrop" onclick="document.getElementById('vtFile').click()">
+        <p><strong>Drop video here</strong> or click to browse</p>
+        <div class="chosen" id="vtFileName"></div>
+        <input type="file" id="vtFile" accept="video/*,audio/*">
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div class="select-row">
+          <label>Model</label>
+          <select id="vtModel">
+            <option value="tiny">tiny (fast)</option>
+            <option value="base">base</option>
+            <option value="medium" selected>medium (recommended)</option>
+            <option value="turbo">⚡ turbo (fast &amp; accurate)</option>
+            <option value="large-v3">large-v3 (slow)</option>
+          </select>
+        </div>
+        <div class="toggle-row">
+      <label>Divide speakers</label>
+      <label class="toggle"><input type="checkbox" id="vtDiarize"><span class="slider"></span></label>
+        </div>
+        <button class="btn btn-primary" id="vtBtn" disabled onclick="startFullTranscribe()">Transcribe</button>
+      </div>
+    </div>
+
+    <div class="progress-area" id="vtProgress">
+      <div class="progress-bar-track"><div class="progress-bar-fill" id="vtBar"></div></div>
+      <div class="progress-msg"><span id="vtMsg">Starting...</span><span class="pct" id="vtPct">0%</span></div>
+      <button class="btn btn-danger btn-sm" id="vtUploadCancelBtn" style="display:none;margin-top:6px">Cancel Upload</button>
+      <button class="btn btn-danger btn-sm" id="vtCancelBtn" onclick="cancelJob('vt')" style="display:none;margin-top:6px">Cancel</button>
+    </div>
+
+    <div class="result" id="vtResult"></div>
+
+    <div class="video-preview" id="vtPreview">
+      <video id="vtVideo" controls></video>
+    </div>
+
+    <div class="trans-output" id="vtOutput">
+      <textarea id="vtText" dir="rtl" rows="8" placeholder="Transcription will appear here..."></textarea>
+      <div class="trans-actions">
+        <button class="btn btn-sm" onclick="vtCopyText()">&#128203; Copy to Clipboard</button>
+        <button class="btn btn-sm" onclick="vtDownloadMd()">&#8595; Download Markdown</button>
+        <button class="btn btn-sm" onclick="vtDownloadSrt()">&#8595; Download SRT</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- Settings modal -->
+<div class="modal-overlay" id="settingsModal">
+  <div class="modal">
+    <h2>&#9881; Settings</h2>
+    <div class="field">
+      <label>Silence Threshold (dB)</label>
+      <input type="number" id="sThreshold" step="1">
+    </div>
+    <div class="field">
+      <label>Silence Duration (s)</label>
+      <input type="number" id="sDuration" step="0.05">
+    </div>
+    <div class="field">
+      <label>Padding (s)</label>
+      <input type="number" id="sPadding" step="0.01">
+    </div>
+    <div class="field">
+      <label>Whisper Model</label>
+      <select id="sModel">
+        <option value="tiny">tiny</option>
+        <option value="base">base</option>
+        <option value="small">small</option>
+        <option value="medium">medium</option>
+        <option value="turbo">turbo (⚡ fast &amp; accurate)</option>
+        <option value="large-v3">large-v3</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Max Words per Line</label>
+      <input type="number" id="sMaxWords" min="2" max="10" step="1">
+    </div>
+    <div class="field">
+      <label>Language</label>
+      <input type="text" id="sLanguage">
+    </div>
+    <div class="field" style="flex-direction:row;align-items:center;gap:8px">
+      <input type="checkbox" id="sRemovePunct">
+      <label for="sRemovePunct" style="margin:0">Remove punctuation by default</label>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeSettings()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveSettings()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast container -->
+<div class="toast-container" id="toasts"></div>
+
+<script>
+/* ========== STATE ========== */
+let cutFileObj = null;
+let cutFileId = null;    // server-side cached file_id (null = needs upload)
+let cutFileDirty = true; // true when a new file was selected
+let subFileObj = null;
+let vtFileObj = null;
+let segments = [];
+let vtSegments = [];
+let noPunct = false;
+let settings = {};
+let cutActiveJobId = null;
+let subActiveJobId = null;
+let vtActiveJobId = null;
+
+/* ========== INIT ========== */
+(async () => {
+  const r = await fetch('/api/settings');
+  settings = await r.json();
+  applySettings();
+})();
+
+function applySettings() {
+  const el = (id) => document.getElementById(id);
+  el('cutThreshold').value = settings.silence_threshold ?? -35;
+  el('cutThresholdVal').textContent = (settings.silence_threshold ?? -35) + ' dB';
+  el('cutDuration').value = settings.silence_duration ?? 0.4;
+  el('cutDurationVal').textContent = (settings.silence_duration ?? 0.4).toFixed(2) + ' s';
+  el('cutPadding').value = settings.silence_padding ?? 0.1;
+  el('cutPaddingVal').textContent = (settings.silence_padding ?? 0.1).toFixed(2) + ' s';
+  el('subModel').value = settings.whisper_model ?? 'medium';
+  el('vtModel').value = settings.whisper_model ?? 'medium';
+  el('subMaxWords').value = settings.max_words_per_line ?? 5;
+  el('subMaxWordsVal').textContent = settings.max_words_per_line ?? 5;
+  noPunct = settings.remove_punctuation ?? false;
+  updatePunctBtn();
+}
+
+/* ========== SLIDER LIVE VALUES ========== */
+document.getElementById('cutThreshold').addEventListener('input', e => {
+  document.getElementById('cutThresholdVal').textContent = e.target.value + ' dB';
+});
+document.getElementById('cutDuration').addEventListener('input', e => {
+  document.getElementById('cutDurationVal').textContent = parseFloat(e.target.value).toFixed(2) + ' s';
+});
+document.getElementById('cutPadding').addEventListener('input', e => {
+  document.getElementById('cutPaddingVal').textContent = parseFloat(e.target.value).toFixed(2) + ' s';
+});
+document.getElementById('subMaxWords').addEventListener('input', e => {
+  document.getElementById('subMaxWordsVal').textContent = e.target.value;
+});
+document.getElementById('subMaxLines').addEventListener('input', e => {
+  document.getElementById('subMaxLinesVal').textContent = e.target.value;
+});
+
+/* ========== DROP ZONES ========== */
+function setupDrop(dropId, fileId, nameId, onFile) {
+  const drop = document.getElementById(dropId);
+  const inp = document.getElementById(fileId);
+
+  drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('drag-over'); });
+  drop.addEventListener('dragleave', () => drop.classList.remove('drag-over'));
+  drop.addEventListener('drop', e => {
+    e.preventDefault();
+    drop.classList.remove('drag-over');
+    if (e.dataTransfer.files.length) onFile(e.dataTransfer.files[0]);
+  });
+  inp.addEventListener('change', () => { if (inp.files.length) onFile(inp.files[0]); });
+}
+
+setupDrop('cutDrop', 'cutFile', 'cutFileName', f => {
+  cutFileObj = f;
+  cutFileDirty = true;  // new file selected, needs fresh upload
+  cutFileId = null;     // invalidate old cache
+  document.getElementById('cutFileName').textContent = f.name;
+  document.getElementById('cutBtn').disabled = false;
+  document.getElementById('cutBtn').textContent = 'Cut Silences';
+});
+setupDrop('subDrop', 'subFile', 'subFileName', f => {
+  subFileObj = f;
+  document.getElementById('subFileName').textContent = f.name;
+  document.getElementById('subBtn').disabled = false;
+});
+setupDrop('vtDrop', 'vtFile', 'vtFileName', f => {
+  vtFileObj = f;
+  document.getElementById('vtFileName').textContent = f.name;
+  document.getElementById('vtBtn').disabled = false;
+});
+
+/* ========== ETA HELPER ========== */
+function fmtEta(seconds) {
+  if (!isFinite(seconds) || seconds < 0) return '';
+  seconds = Math.round(seconds);
+  if (seconds < 60) return `~${seconds}s remaining`;
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `~${m}m ${s}s remaining`;
+}
+
+/* ========== XHR UPLOAD WITH PROGRESS ========== */
+function uploadFile(url, formData, barId, msgId, pctId, progressId, uploadCancelBtnId) {
+  return new Promise((resolve, reject) => {
+    const bar = document.getElementById(barId);
+    const msg = document.getElementById(msgId);
+    const pct = document.getElementById(pctId);
+    const area = document.getElementById(progressId);
+    const cancelBtn = uploadCancelBtnId ? document.getElementById(uploadCancelBtnId) : null;
+
+    area.classList.add('active');
+    bar.style.width = '0%';
+    msg.textContent = 'Uploading file...';
+    pct.textContent = '0%';
+
+    const uploadStart = Date.now();
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', url);
+
+    if (cancelBtn) {
+      cancelBtn.style.display = 'inline-block';
+      cancelBtn.onclick = () => {
+        xhr.abort();
+      };
+    }
+
+    xhr.upload.addEventListener('progress', e => {
+      if (e.lengthComputable) {
+        const p = Math.round(e.loaded / e.total * 100);
+        bar.style.width = p + '%';
+        pct.textContent = p + '%';
+        const mb = (e.loaded / 1048576).toFixed(1);
+        const totalMb = (e.total / 1048576).toFixed(1);
+        const elapsed = (Date.now() - uploadStart) / 1000;
+        let eta = '';
+        if (p > 2 && elapsed > 0.5) {
+          const remaining = (elapsed / p) * (100 - p);
+          eta = ' — ' + fmtEta(remaining);
+        }
+        msg.textContent = `Uploading file... ${mb} / ${totalMb} MB${eta}`;
+      }
+    });
+
+    xhr.addEventListener('load', () => {
+      if (cancelBtn) cancelBtn.style.display = 'none';
+      try {
+        const d = JSON.parse(xhr.responseText);
+        if (xhr.status >= 400 || d.error) {
+          reject(new Error(d.error || `Server error (${xhr.status})`));
+        } else {
+          msg.textContent = 'File uploaded successfully! Processing...';
+          toast('File uploaded successfully!', 'info');
+          resolve(d);
+        }
+      } catch {
+        reject(new Error('Server returned an invalid response.'));
+      }
+    });
+
+    xhr.addEventListener('error', () => {
+      if (cancelBtn) cancelBtn.style.display = 'none';
+      reject(new Error('Upload failed — network error'));
+    });
+    xhr.addEventListener('abort', () => {
+      if (cancelBtn) cancelBtn.style.display = 'none';
+      reject(new Error('Upload cancelled'));
+    });
+    xhr.send(formData);
+  });
+}
+
+/* ========== POLL JOB ========== */
+function pollJob(jobId, barId, msgId, pctId, progressId, onDone) {
+  const bar = document.getElementById(barId);
+  const msg = document.getElementById(msgId);
+  const pct = document.getElementById(pctId);
+  const area = document.getElementById(progressId);
+  area.classList.add('active');
+
+  const jobStart = Date.now();
+  let lastProgress = 0;
+
+  const iv = setInterval(async () => {
+    try {
+      const r = await fetch('/api/job/' + jobId);
+      if (!r.ok) throw new Error('Server error');
+      const d = await r.json();
+      bar.style.width = d.progress + '%';
+
+      let eta = '';
+      if (d.progress > 3 && d.progress < 100) {
+        const elapsed = (Date.now() - jobStart) / 1000;
+        const remaining = (elapsed / d.progress) * (100 - d.progress);
+        eta = ' — ' + fmtEta(remaining);
+      }
+      msg.textContent = (d.message || '') + eta;
+      pct.textContent = d.progress + '%';
+
+      if (d.status === 'done' || d.status === 'error' || d.status === 'cancelled') {
+        clearInterval(iv);
+        onDone(d);
+      }
+    } catch {
+      clearInterval(iv);
+      onDone({ status: 'error', message: 'Connection lost' });
+    }
+  }, 800);
+}
+
+/* ========== SILENCE CUT ========== */
+async function startCut() {
+  if (!cutFileObj) return;
+  const btn = document.getElementById('cutBtn');
+  const result = document.getElementById('cutResult');
+  btn.disabled = true;
+  result.className = 'result';
+  result.style.display = 'none';
+  document.getElementById('cutPreview').classList.remove('active');
+  document.getElementById('cutVideo').removeAttribute('src');
+  document.getElementById('cutVideo').load();
+
+  const threshold = document.getElementById('cutThreshold').value;
+  const duration = document.getElementById('cutDuration').value;
+  const padding = document.getElementById('cutPadding').value;
+
+  try {
+    // --- Phase 1: Upload file if needed (only on first run or new file) ---
+    if (cutFileDirty || !cutFileId) {
+      const uploadFd = new FormData();
+      uploadFd.append('file', cutFileObj);
+
+      const uploadResult = await uploadFile(
+        '/api/upload', uploadFd,
+        'cutBar', 'cutMsg', 'cutPct', 'cutProgress', 'cutUploadCancelBtn'
+      );
+      cutFileId = uploadResult.file_id;
+      cutFileDirty = false;
+      toast('File uploaded & cached on server!', 'info');
+    } else {
+      // File already on server — show instant progress
+      const area = document.getElementById('cutProgress');
+      area.classList.add('active');
+      document.getElementById('cutBar').style.width = '0%';
+      document.getElementById('cutMsg').textContent = '\u26A1 Using cached file — processing...';
+      document.getElementById('cutPct').textContent = '';
+      toast('\u26A1 Reprocessing with cached file (no re-upload)', 'info');
+    }
+
+    // --- Phase 2: Send lightweight processing request with file_id ---
+    const fd = new FormData();
+    fd.append('file_id', cutFileId);
+    fd.append('threshold', threshold);
+    fd.append('duration', duration);
+    fd.append('padding', padding);
+
+    const r = await fetch('/api/cut-silences', { method: 'POST', body: fd });
+    const d = await r.json();
+
+    if (r.status === 410) {
+      // Cache expired — force re-upload
+      cutFileDirty = true;
+      cutFileId = null;
+      toast('Server cache expired, re-uploading...', 'info');
+      btn.disabled = false;
+      return startCut();
+    }
+    if (d.error) throw new Error(d.error);
+
+    // Update file_id if server returned a new one
+    if (d.file_id) cutFileId = d.file_id;
+
+    cutActiveJobId = d.job_id;
+    document.getElementById('cutCancelBtn').style.display = '';
+
+    pollJob(d.job_id, 'cutBar', 'cutMsg', 'cutPct', 'cutProgress', job => {
+      btn.disabled = false;
+      document.getElementById('cutCancelBtn').style.display = 'none';
+      cutActiveJobId = null;
+      if (job.status === 'done') {
+        btn.textContent = '\u26A1 Reprocess';
+        result.className = 'result success';
+        result.textContent = '\u2713 Silence removal complete! Preview below.';
+        const url = '/api/download/' + job.output_file;
+        document.getElementById('cutVideo').src = url;
+        document.getElementById('cutDownloadLink').href = url;
+        document.getElementById('cutPreview').classList.add('active');
+        toast('Silence removal complete!', 'success');
+      } else if (job.status === 'cancelled') {
+        btn.textContent = cutFileId ? '\u26A1 Reprocess' : 'Cut Silences';
+        result.className = 'result error';
+        result.textContent = 'Cancelled.';
+        toast('Operation cancelled', 'info');
+      } else {
+        result.className = 'result error';
+        result.textContent = 'Error: ' + job.message;
+        toast('Error: ' + job.message, 'error');
+      }
+    });
+  } catch (e) {
+    btn.disabled = false;
+    result.className = 'result error';
+    result.textContent = 'Error: ' + e.message;
+    toast('Error: ' + e.message, 'error');
+  }
+}
+
+/* ========== TRANSCRIBE ========== */
+async function startTranscribe() {
+  if (!subFileObj) return;
+  const btn = document.getElementById('subBtn');
+  const result = document.getElementById('subResult');
+  btn.disabled = true;
+  result.className = 'result';
+  result.style.display = 'none';
+  document.getElementById('subEditor').classList.remove('active');
+  document.getElementById('subPreview').classList.remove('active');
+  document.getElementById('subVideo').removeAttribute('src');
+  document.getElementById('subVideo').load();
+
+  const fd = new FormData();
+  fd.append('file', subFileObj);
+  fd.append('model', document.getElementById('subModel').value);
+  fd.append('language', settings.language || 'Hebrew');
+  fd.append('max_words', document.getElementById('subMaxWords').value);
+  fd.append('max_lines', document.getElementById('subMaxLines').value);
+  fd.append('diarize', document.getElementById('subDiarize').checked);
+
+  try {
+    const d = await uploadFile('/api/transcribe', fd, 'subBar', 'subMsg', 'subPct', 'subProgress', 'subUploadCancelBtn');
+
+    subActiveJobId = d.job_id;
+    document.getElementById('subCancelBtn').style.display = '';
+
+    pollJob(d.job_id, 'subBar', 'subMsg', 'subPct', 'subProgress', job => {
+      btn.disabled = false;
+      document.getElementById('subCancelBtn').style.display = 'none';
+      subActiveJobId = null;
+      if (job.status === 'done') {
+        result.className = 'result success';
+        result.textContent = job.message;
+        segments = job.transcript || [];
+        renderSegments();
+        document.getElementById('subEditor').classList.add('active');
+        if (job.source_file) {
+          document.getElementById('subVideo').src = '/api/download/' + job.source_file;
+          document.getElementById('subPreview').classList.add('active');
+        }
+        toast('Transcription complete!', 'success');
+      } else if (job.status === 'cancelled') {
+        result.className = 'result error';
+        result.textContent = 'Cancelled.';
+        toast('Transcription cancelled', 'info');
+      } else {
+        result.className = 'result error';
+        result.textContent = 'Error: ' + job.message;
+        toast('Error: ' + job.message, 'error');
+      }
+    });
+  } catch (e) {
+    btn.disabled = false;
+    result.className = 'result error';
+    result.textContent = 'Error: ' + e.message;
+    toast('Error: ' + e.message, 'error');
+  }
+}
+
+/* ========== LIVE SUBTITLE OVERLAY ========== */
+let _subOverlayIdx = -1;
+
+function updateSubOverlay(force) {
+  const vid = document.getElementById('subVideo');
+  const overlay = document.getElementById('subOverlay');
+  if (!vid || !overlay) return;
+  const t = vid.currentTime;
+  const maxW = parseInt(document.getElementById('subMaxWords').value) || 5;
+  let found = -1;
+  for (let i = 0; i < segments.length; i++) {
+    if (t >= segments[i].start && t <= segments[i].end) { found = i; break; }
+    if (segments[i].start > t) break;
+  }
+  if (found === _subOverlayIdx && !force) return;
+  _subOverlayIdx = found;
+  if (found === -1) { overlay.innerHTML = ''; return; }
+  const words = segments[found].text.split(/\s+/);
+  const lines = [];
+  for (let j = 0; j < words.length; j += maxW) {
+    lines.push(words.slice(j, j + maxW).join(' '));
+  }
+  overlay.innerHTML = '<span>' + lines.join('\n') + '</span>';
+}
+
+document.getElementById('subVideo').addEventListener('timeupdate', () => updateSubOverlay(false));
+document.getElementById('subVideo').addEventListener('emptied', () => {
+  document.getElementById('subOverlay').innerHTML = '';
+  _subOverlayIdx = -1;
+});
+
+/* ========== SEGMENT EDITOR ========== */
+function fmtTime(s) {
+  const m = Math.floor(s / 60);
+  const sec = (s % 60).toFixed(1);
+  return m + ':' + (sec < 10 ? '0' : '') + sec;
+}
+
+function renderSegments() {
+  const list = document.getElementById('segList');
+  document.getElementById('segCount').textContent = segments.length + ' segments';
+  list.innerHTML = '';
+
+  segments.forEach((seg, i) => {
+    const div = document.createElement('div');
+    div.className = 'seg';
+    div.innerHTML = `
+      <div class="seg-idx">${i + 1}</div>
+      <textarea dir="rtl" rows="1" data-i="${i}" oninput="autoGrow(this);segEdit(${i},this.value)">${seg.text}</textarea>
+      <div class="seg-meta">
+        <div class="seg-time">${fmtTime(seg.start)} &rarr; ${fmtTime(seg.end)}</div>
+        <div class="seg-actions">
+          <button title="Merge with next" onclick="mergeNext(${i})">&#10549;</button>
+          <button title="Split" onclick="splitSeg(${i})">&#10548;</button>
+          <button class="del" title="Delete" onclick="deleteSeg(${i})">&#10005;</button>
+        </div>
+      </div>`;
+    list.appendChild(div);
+    const ta = div.querySelector('textarea');
+    autoGrow(ta);
+
+    // Enter = split subtitle at cursor position
+    ta.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        const idx = parseInt(this.dataset.i);
+        const pos = this.selectionStart;
+        const text = this.value;
+        const before = text.substring(0, pos).trim();
+        const after = text.substring(pos).trim();
+        if (!before || !after) return;
+        const seg = segments[idx];
+        const origEnd = seg.end;
+        const allW = text.split(/\s+/).filter(Boolean).length;
+        const bW = before.split(/\s+/).filter(Boolean).length;
+        const splitTime = seg.start + (bW / allW) * (origEnd - seg.start);
+        seg.text = before;
+        seg.end = splitTime;
+        segments.splice(idx + 1, 0, { id: 0, start: splitTime, end: origEnd, text: after });
+        renderSegments();
+        // Focus the new subtitle textarea
+        const nextTa = document.querySelector(`textarea[data-i="${idx + 1}"]`);
+        if (nextTa) { nextTa.focus(); nextTa.setSelectionRange(0, 0); }
+      }
+    });
+  });
+  updateSubOverlay(true);
+}
+
+function autoGrow(el) {
+  el.style.height = 'auto';
+  el.style.height = el.scrollHeight + 'px';
+}
+
+function segEdit(i, val) {
+  segments[i].text = val;
+  if (i === _subOverlayIdx) updateSubOverlay(true);
+}
+
+function mergeNext(i) {
+  if (i >= segments.length - 1) return;
+  segments[i].text += ' ' + segments[i + 1].text;
+  segments[i].end = segments[i + 1].end;
+  segments.splice(i + 1, 1);
+  renderSegments();
+}
+
+function splitSeg(i) {
+  const seg = segments[i];
+  const words = seg.text.split(/\s+/);
+  if (words.length < 2) return;
+  const mid = Math.ceil(words.length / 2);
+  const midTime = seg.start + (seg.end - seg.start) / 2;
+  const newSeg = { id: 0, start: midTime, end: seg.end, text: words.slice(mid).join(' ') };
+  seg.text = words.slice(0, mid).join(' ');
+  seg.end = midTime;
+  segments.splice(i + 1, 0, newSeg);
+  renderSegments();
+}
+
+function deleteSeg(i) {
+  segments.splice(i, 1);
+  renderSegments();
+}
+
+/* ========== PUNCTUATION TOGGLE ========== */
+const PUNCT_RE = /[,\.!?;:\"\'،]+/g;
+
+function togglePunct() {
+  noPunct = !noPunct;
+  updatePunctBtn();
+  if (noPunct) {
+    segments.forEach(s => { s.text = s.text.replace(PUNCT_RE, '').trim(); });
+    renderSegments();
+  }
+}
+
+function updatePunctBtn() {
+  const btn = document.getElementById('noPunctBtn');
+  btn.style.background = noPunct ? 'var(--accent)' : '';
+  btn.style.color = noPunct ? '#fff' : '';
+  btn.style.borderColor = noPunct ? 'var(--accent)' : '';
+}
+
+/* ========== EXPORT SRT ========== */
+async function exportSrt() {
+  const body = {
+    segments,
+    max_words_per_line: parseInt(document.getElementById('subMaxWords').value),
+    remove_punctuation: noPunct,
+  };
+  try {
+    const r = await fetch('/api/export-srt', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    if (!r.ok) throw new Error('Export failed');
+    const blob = await r.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'subtitles.srt'; a.click();
+    URL.revokeObjectURL(url);
+    toast('SRT exported!', 'success');
+  } catch (e) {
+    toast('Export failed: ' + e.message, 'error');
+  }
+}
+
+/* ========== COPY TEXT ========== */
+function copyAllText() {
+  const text = segments.map(s => s.text).join('\n');
+  navigator.clipboard.writeText(text).then(() => {
+    toast('Text copied to clipboard!', 'info');
+  });
+}
+
+/* ========== VIDEO TRANSCRIBER ========== */
+async function startFullTranscribe() {
+  if (!vtFileObj) return;
+  const btn = document.getElementById('vtBtn');
+  const result = document.getElementById('vtResult');
+  btn.disabled = true;
+  result.className = 'result';
+  result.style.display = 'none';
+  document.getElementById('vtOutput').classList.remove('active');
+  document.getElementById('vtPreview').classList.remove('active');
+  document.getElementById('vtVideo').removeAttribute('src');
+  document.getElementById('vtVideo').load();
+
+  const fd = new FormData();
+  fd.append('file', vtFileObj);
+  fd.append('model', document.getElementById('vtModel').value);
+  fd.append('language', settings.language || 'Hebrew');
+  fd.append('max_words', 10);
+  fd.append('diarize', document.getElementById('vtDiarize').checked);
+
+  try {
+    const d = await uploadFile('/api/transcribe', fd, 'vtBar', 'vtMsg', 'vtPct', 'vtProgress', 'vtUploadCancelBtn');
+
+    vtActiveJobId = d.job_id;
+    document.getElementById('vtCancelBtn').style.display = '';
+
+    pollJob(d.job_id, 'vtBar', 'vtMsg', 'vtPct', 'vtProgress', job => {
+      btn.disabled = false;
+      document.getElementById('vtCancelBtn').style.display = 'none';
+      vtActiveJobId = null;
+      if (job.status === 'done') {
+        result.className = 'result success';
+        result.textContent = job.message;
+        vtSegments = job.transcript || [];
+        const fullText = job.full_text || vtSegments.map(s => s.text).join(' ');
+        document.getElementById('vtText').value = fullText;
+        document.getElementById('vtOutput').classList.add('active');
+        if (job.source_file) {
+          document.getElementById('vtVideo').src = '/api/download/' + job.source_file;
+          document.getElementById('vtPreview').classList.add('active');
+        }
+        toast('Transcription complete!', 'success');
+      } else if (job.status === 'cancelled') {
+        result.className = 'result error';
+        result.textContent = 'Cancelled.';
+        toast('Transcription cancelled', 'info');
+      } else {
+        result.className = 'result error';
+        result.textContent = 'Error: ' + job.message;
+        toast('Error: ' + job.message, 'error');
+      }
+    });
+  } catch (e) {
+    btn.disabled = false;
+    result.className = 'result error';
+    result.textContent = 'Error: ' + e.message;
+    toast('Error: ' + e.message, 'error');
+  }
+}
+
+function vtCopyText() {
+  const text = document.getElementById('vtText').value;
+  navigator.clipboard.writeText(text).then(() => {
+    toast('Transcription copied to clipboard!', 'info');
+  });
+}
+
+async function vtDownloadMd() {
+  const text = document.getElementById('vtText').value;
+  try {
+    const r = await fetch('/api/export-markdown', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text, title: vtFileObj ? vtFileObj.name : 'Transcription' }),
+    });
+    if (!r.ok) throw new Error('Export failed');
+    const blob = await r.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'transcription.md'; a.click();
+    URL.revokeObjectURL(url);
+    toast('Markdown exported!', 'success');
+  } catch (e) {
+    toast('Markdown export failed: ' + e.message, 'error');
+  }
+}
+
+async function vtDownloadSrt() {
+  if (!vtSegments.length) { toast('No segments to export', 'error'); return; }
+  try {
+    const r = await fetch('/api/export-srt', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ segments: vtSegments, max_words_per_line: 10, remove_punctuation: false }),
+    });
+    if (!r.ok) throw new Error('Export failed');
+    const blob = await r.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'transcription.srt'; a.click();
+    URL.revokeObjectURL(url);
+    toast('SRT exported!', 'success');
+  } catch (e) {
+    toast('SRT export failed: ' + e.message, 'error');
+  }
+}
+
+/* ========== SETTINGS ========== */
+function openSettings() {
+  document.getElementById('sThreshold').value = settings.silence_threshold ?? -35;
+  document.getElementById('sDuration').value = settings.silence_duration ?? 0.4;
+  document.getElementById('sPadding').value = settings.silence_padding ?? 0.1;
+  document.getElementById('sModel').value = settings.whisper_model ?? 'medium';
+  document.getElementById('sMaxWords').value = settings.max_words_per_line ?? 5;
+  document.getElementById('sLanguage').value = settings.language ?? 'Hebrew';
+  document.getElementById('sRemovePunct').checked = settings.remove_punctuation ?? false;
+  document.getElementById('settingsModal').classList.add('active');
+}
+
+function closeSettings() {
+  document.getElementById('settingsModal').classList.remove('active');
+}
+
+async function saveSettings() {
+  const data = {
+    silence_threshold: parseInt(document.getElementById('sThreshold').value),
+    silence_duration: parseFloat(document.getElementById('sDuration').value),
+    silence_padding: parseFloat(document.getElementById('sPadding').value),
+    whisper_model: document.getElementById('sModel').value,
+    max_words_per_line: parseInt(document.getElementById('sMaxWords').value),
+    language: document.getElementById('sLanguage').value,
+    remove_punctuation: document.getElementById('sRemovePunct').checked,
+  };
+  try {
+    const r = await fetch('/api/settings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    settings = await r.json();
+    applySettings();
+    closeSettings();
+    toast('Settings saved!', 'success');
+  } catch (e) {
+    toast('Failed to save settings', 'error');
+  }
+}
+
+// Close modal on overlay click
+document.getElementById('settingsModal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeSettings();
+});
+
+/* ========== CANCEL & CACHE ========== */
+async function cancelJob(type) {
+  let jobId;
+  if (type === 'cut') jobId = cutActiveJobId;
+  else if (type === 'sub') jobId = subActiveJobId;
+  else if (type === 'vt') jobId = vtActiveJobId;
+  if (!jobId) return;
+  try {
+    await fetch('/api/job/' + jobId + '/cancel', { method: 'POST' });
+  } catch (e) {
+    toast('Failed to cancel', 'error');
+  }
+}
+
+async function clearCache() {
+  try {
+    const r = await fetch('/api/cache/clear', { method: 'POST' });
+    const d = await r.json();
+    cutFileId = null;
+    cutFileDirty = true;
+    document.getElementById('cutBtn').textContent = 'Cut Silences';
+    toast('Cache cleared (' + d.cleared_files + ' files)', 'success');
+  } catch (e) {
+    toast('Failed to clear cache', 'error');
+  }
+}
+
+/* ========== TOAST ========== */
+function toast(msg, type = 'info') {
+  const el = document.createElement('div');
+  el.className = 'toast ' + type;
+  el.textContent = msg;
+  document.getElementById('toasts').appendChild(el);
+  setTimeout(() => el.remove(), 2800);
+}
+</script>
+</body>
+</html>
